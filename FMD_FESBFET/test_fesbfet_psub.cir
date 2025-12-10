@@ -1,0 +1,34 @@
+//Test Fig. 14
+simulator lang=spectre
+global 0
+ahdl_include "SchottkyGatedJunction_e.va"
+ahdl_include "SchottkyGatedJunction_h.va"
+parameters Vs=0.0 Vd=0.5 Vg=0 Charge=10e-6 T_C=21.8
+// Netlist
+VDrain (C 0) vsource dc=Vd type=dc
+VSource (A 0) vsource dc=Vs type=dc
+VGate (G 0) vsource dc=Vg type=dc
+SD1h (A B1 Ch) SchGDiode_h_v2 
+SD2h (C B2 Ch) SchGDiode_h_v2 
+SD1e (A B1 Ch) SchGDiode_e_v2 
+SD2e (C B2 Ch) SchGDiode_e_v2 
+VCharge (Ch 0) vsource dc=Charge type=dc
+Mn0 (B2 G B1 0) nchmos3 l=10u w=1u ad=120p as=75p pd=36u ps=6u
+
+//Simulator Options
+simulatorOptions options reltol=100e-6 vabstol=1e-6 iabstol=1e-12 temp=T_C \ 
+    tnom=25 homotopy=all limit=delta scalem=1.0 scale=1.0 \ 
+    compatible=spice2 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 \ 
+    cols=80 pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf 
+simOptions options minr=1e-3
+// Analysis
+// DC operating point
+OpPoint dc print=yes readns="%C:r.dc25" write="%C:r.dc25"
+// DC Sweep
+dcSweep dc param=Vg start=0 stop=1 step=1e-3 maxiters=150 \ 
+    maxsteps=10000 annotate=status
+print I(SD1:metal), name=dcSweep to="%C:r_%A.out" precision="%15g"
+saveOptions options save=all currents=all
+
+model nchmos3 mos3 type=n vto=0.5 tox=0.3e-7 nsub=1e15
+//gamma=0.4511 kappa=5 tox=0.3e-7 nsub=1e15

@@ -1,0 +1,36 @@
+//Test - Fig. 6
+simulator lang=spectre
+global 0
+ahdl_include "SchottkyGatedJunction_e.va"
+ahdl_include "SchottkyGatedJunction_h.va"
+parameters Vs=0 T_C=21.8 A=1e-8 l=10e-4 rho=4.58		// rho [Ohm cm], A = Diode Area (1um*1um) [cm^2], l = Diode length [cm]
+// rho for n-type 1e15 cm-3: 4.58
+// rho for n-type 1e16 cm-3: 0.53
+// rho for n-type 1e17 cm-3: 0.089
+// rho for n-type 1e18 cm-3: 0.025
+// rho for n-type 5e18 cm-3: 0.01
+// rho for n-type 1e19 cm-3: 0.0059
+// rho for n-type 1e20 cm-3: 8.48e-4
+// Netlist
+VDrain (C 0) vsource dc=0 type=dc
+VSource (A 0) vsource dc=Vs type=dc
+SD1 (B1 A 0) SchGDiode_e_v2 
+SD2 (B2 C 0) SchGDiode_e_v2 
+R0 (B1 B2) resistor r=rho*l/A
+
+//Simulator Options
+simulatorOptions options reltol=100e-6 vabstol=1e-6 iabstol=1e-12 temp=T_C \ 
+    tnom=25 homotopy=all limit=delta scalem=1.0 scale=1.0 \ 
+    compatible=spice2 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 \ 
+    cols=80 pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf 
+simOptions options minr=1e-3
+// Analysis
+// DC operating point
+OpPoint dc print=yes readns="%C:r.dc25" write="%C:r.dc25"
+// DC Sweep
+dcSweep dc param=Vs start=-1 stop=1.0 step=0.001 maxiters=150 \ 
+    maxsteps=10000 annotate=status
+save SD1:p
+save SD2:p
+saveOptions options save=all currents=all
+

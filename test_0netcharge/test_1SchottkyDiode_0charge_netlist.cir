@@ -1,0 +1,27 @@
+//Test -  Fig.4
+simulator lang=spectre
+global 0
+ahdl_include "SchottkyGatedJunction_e.va"
+parameters Vs=0 Vd=0 T_C=21.8
+// Netlist
+VDrain (nd 0) vsource dc=Vd type=dc
+VSource (ns 0) vsource dc=Vs type=dc
+SD (ns nd1 0) SchGDiode_e_v2 
+R0 (nd1 nd) resistor r=22.9k
+
+//Simulator Options
+simulatorOptions options reltol=100e-6 vabstol=1e-6 iabstol=1e-12 temp=T_C \ 
+    tnom=25 homotopy=all limit=delta scalem=1.0 scale=1.0 \ 
+    compatible=spice2 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 digits=5 \ 
+    cols=80 pivrel=1e-3 sensfile="../psf/sens.output" checklimitdest=psf 
+simOptions options minr=1e-3
+// Analysis
+// DC operating point
+OpPoint dc print=yes readns="%C:r.dc25" write="%C:r.dc25"
+// DC Sweep
+// dcSweep dc dev=SD param=N start=1e15 stop=8e18 step=1e17 maxiters=150 \ 
+dcSweep dc param=Vd start=-2 stop=5 step=0.001 maxiters=150 \ 
+    maxsteps=10000 annotate=status
+save SD:p
+saveOptions options save=all currents=all
+
